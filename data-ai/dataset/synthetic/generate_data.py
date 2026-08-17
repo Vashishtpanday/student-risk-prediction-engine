@@ -53,64 +53,50 @@ def _sample_semester() -> int:
 
 def _infer_risk(attendance: float, internal_marks: float, backlogs: int) -> str:
     """Classify a student risk category according to the provided rules."""
-    if attendance < 60 or internal_marks < 40 or backlogs > 2:
+    # HIGH RISK: Low attendance OR low internal marks OR multiple previous backlogs
+    if attendance < 60 or internal_marks < 40 or backlogs >= 2:
         return "High Risk"
-    if attendance < 75 or internal_marks < 60:
-        return "Moderate Risk"
-    return "Low Risk"
+    # LOW RISK: Good attendance AND good internal marks AND no or very few previous backlogs
+    if attendance >= 75 and internal_marks >= 70 and backlogs <= 1:
+        return "Low Risk"
+    # MODERATE RISK: Average attendance/marks and few backlogs
+    return "Moderate Risk"
 
 
 def _sample_attendance(semester: int, department: str) -> int:
-    """Generate attendance with a realistic relationship to semester and department."""
-    base = 78 + random.uniform(-8, 8)
-
-    if semester > 4:
-        base -= 2.5
-    if department in {"CSE", "AI&DS"}:
-        base += 1.0
-    if department == "EEE":
-        base -= 0.5
-
-    return int(_clamp(base, 40, 100))
+    """Generate realistic attendance percentages between 0 and 100 with variation."""
+    return int(random.triangular(30, 100, 78))
 
 
 def _sample_internal_marks(attendance: int, semester: int, department: str) -> int:
-    """Generate internal marks that correlate with attendance and academic level."""
-    base = attendance * 0.58 + random.uniform(-7, 7)
-
-    if semester > 4:
-        base -= 2.5
-    if department in {"CSE", "AI&DS"}:
-        base += 1.5
-    if department == "MECH":
-        base -= 0.8
-
-    return int(_clamp(base, 20, 100))
+    """Generate realistic internal marks with meaningful variation between 1 and 100."""
+    mark_range = random.choices(
+        ["1-20", "21-40", "41-60", "61-80", "81-100"],
+        weights=[0.08, 0.12, 0.25, 0.35, 0.20],
+        k=1
+    )[0]
+    if mark_range == "1-20":
+        return random.randint(1, 20)
+    elif mark_range == "21-40":
+        return random.randint(21, 40)
+    elif mark_range == "41-60":
+        return random.randint(41, 60)
+    elif mark_range == "61-80":
+        return random.randint(61, 80)
+    else:
+        return random.randint(81, 100)
 
 
 def _sample_backlogs(semester: int, attendance: int, internal_marks: int) -> int:
-    """Generate backlogs with a realistic dependence on academic performance."""
+    """Generate realistic backlog values between 0 and 5, with semester 1 students having 0."""
     if semester == 1:
         return 0
 
-    poor_performance = 0.0
-    if attendance < 70:
-        poor_performance += 0.22
-    if internal_marks < 50:
-        poor_performance += 0.24
-    if semester >= 6:
-        poor_performance += 0.08
-
-    backlog_prob = min(0.70, 0.06 + poor_performance)
-    if random.random() < backlog_prob:
-        backlog_count = 1
-        if random.random() < backlog_prob * 0.55:
-            backlog_count += 1
-        if random.random() < backlog_prob * 0.25:
-            backlog_count += 1
-        return min(5, backlog_count)
-
-    return 0
+    return random.choices(
+        [0, 1, 2, 3, 4, 5],
+        weights=[0.75, 0.12, 0.07, 0.03, 0.02, 0.01],
+        k=1
+    )[0]
 
 
 def validate_dataset(records: List[Dict[str, object]]) -> None:
@@ -126,6 +112,8 @@ def validate_dataset(records: List[Dict[str, object]]) -> None:
     if len(names) != len(set(names)):
         raise ValueError("Duplicate student names found")
 
+    risk_categories_found = set()
+
     for record in records:
         for field in DATASET_COLUMNS:
             if record.get(field) in (None, ""):
@@ -135,17 +123,26 @@ def validate_dataset(records: List[Dict[str, object]]) -> None:
         internal_marks = int(record["internal_marks"])
         semester = int(record["semester"])
         backlogs = int(record["previous_backlogs"])
+        cp_ncp = str(record["cp_ncp"])
+        risk = str(record["risk_category"])
 
         if not 0 <= attendance <= 100:
-            raise ValueError("Attendance values must be within 0-100")
-        if not 0 <= internal_marks <= 100:
-            raise ValueError("Internal marks must be within 0-100")
+            raise ValueError(f"Attendance value {attendance} is not within 0-100")
+        if not 1 <= internal_marks <= 100:
+            raise ValueError(f"Internal marks value {internal_marks} is not within 1-100")
         if not 1 <= semester <= 8:
-            raise ValueError("Semester values must be within 1-8")
+            raise ValueError(f"Semester value {semester} is not within 1-8")
         if not 0 <= backlogs <= 5:
-            raise ValueError("Previous backlog values must be within 0-5")
+            raise ValueError(f"Previous backlog value {backlogs} is not within 0-5")
         if semester == 1 and backlogs != 0:
             raise ValueError("Semester 1 students must have zero previous backlogs")
+        if cp_ncp != "CP":
+            raise ValueError(f"cp_ncp must contain ONLY 'CP', found '{cp_ncp}'")
+
+        risk_categories_found.add(risk)
+
+    if not {"Low Risk", "Moderate Risk", "High Risk"}.issubset(risk_categories_found):
+        raise ValueError("All three risk categories must be represented")
 
 
 def write_dataset(records: List[Dict[str, object]], output_path: Union[str, Path]) -> Path:
@@ -184,13 +181,7 @@ def generate_dataset(
         internal_marks = _sample_internal_marks(attendance, semester, department)
         previous_backlogs = _sample_backlogs(semester, attendance, internal_marks)
         risk_category = _infer_risk(attendance, internal_marks, previous_backlogs)
-
-        # Make CP/NCP more realistic by aligning it with good academic standing.
-        if attendance >= 80 and internal_marks >= 70 and previous_backlogs <= 1:
-            cp_ncp = "CP"
-        else:
-            cp_ncp = "NCP"
-
+        cp_ncp = "CP"
         name = _generate_unique_name(fake, used_names)
 
         records.append(
@@ -212,16 +203,63 @@ def generate_dataset(
     resolved_output_path = Path(output_path) if output_path else Path(__file__).resolve().parents[2] / "dataset" / "raw" / "student_data_raw.csv"
     write_dataset(records, resolved_output_path)
 
-    risk_counts = {}
+    risk_counts = {"Low Risk": 0, "Moderate Risk": 0, "High Risk": 0}
+    cp_counts = {}
+    attendances = []
+    marks = []
+    backlogs_counts = {}
+    missing_count = 0
+    marks_ranges = {"1-20": 0, "21-40": 0, "41-60": 0, "61-80": 0, "81-100": 0}
+
     for record in records:
         risk_counts[record["risk_category"]] = risk_counts.get(record["risk_category"], 0) + 1
+        cp_counts[record["cp_ncp"]] = cp_counts.get(record["cp_ncp"], 0) + 1
+        attendances.append(record["attendance_pct"])
+        m = record["internal_marks"]
+        marks.append(m)
+        if 1 <= m <= 20:
+            marks_ranges["1-20"] += 1
+        elif 21 <= m <= 40:
+            marks_ranges["21-40"] += 1
+        elif 41 <= m <= 60:
+            marks_ranges["41-60"] += 1
+        elif 61 <= m <= 80:
+            marks_ranges["61-80"] += 1
+        elif 81 <= m <= 100:
+            marks_ranges["81-100"] += 1
+            
+        backlogs_counts[record["previous_backlogs"]] = backlogs_counts.get(record["previous_backlogs"], 0) + 1
+        for field in DATASET_COLUMNS:
+            if record.get(field) in (None, ""):
+                missing_count += 1
 
-    print(f"Total students generated: {len(records)}")
-    print(f"Number of unique student IDs: {len({record['student_id'] for record in records})}")
-    print(f"Number of unique student names: {len({record['name'] for record in records})}")
-    print("Number of students in each risk category:")
-    for category in ["High Risk", "Moderate Risk", "Low Risk"]:
-        print(f"  - {category}: {risk_counts.get(category, 0)}")
+    student_ids = [record["student_id"] for record in records]
+    names = [record["name"] for record in records]
+    duplicate_ids = len(student_ids) - len(set(student_ids))
+    duplicate_names = len(names) - len(set(names))
+
+    print(f"Total records: {len(records)}")
+    print("Risk category counts:")
+    for cat, cnt in risk_counts.items():
+        print(f"  - {cat}: {cnt}")
+    print("Risk category percentages:")
+    for cat, cnt in risk_counts.items():
+        print(f"  - {cat}: {cnt / len(records) * 100:.1f}%")
+    print("CP/NCP counts:")
+    for cat, cnt in cp_counts.items():
+        print(f"  - {cat}: {cnt}")
+    print(f"Internal marks minimum: {min(marks)}")
+    print(f"Internal marks maximum: {max(marks)}")
+    print("Internal marks distribution by ranges:")
+    for r, cnt in marks_ranges.items():
+        print(f"  - {r}: {cnt}")
+    print(f"Attendance range: {min(attendances)} to {max(attendances)}")
+    print("Previous backlog distribution:")
+    for bk, cnt in sorted(backlogs_counts.items()):
+        print(f"  - Backlogs {bk}: {cnt}")
+    print(f"Missing values: {missing_count}")
+    print(f"Duplicate IDs: {duplicate_ids}")
+    print(f"Duplicate names: {duplicate_names}")
     print(f"Output CSV location: {resolved_output_path}")
 
     return records

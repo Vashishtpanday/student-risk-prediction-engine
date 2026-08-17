@@ -79,3 +79,39 @@ def test_clean_dataset_handles_duplicates_and_invalid_values(tmp_path):
     assert (cleaned_df.loc[cleaned_df["semester"] == 1, "previous_backlogs"] == 0).all()
     assert summary["rows_processed"] == 4
     assert summary["rows_removed"] >= 1
+
+
+def test_clean_dataset_actual_generated_files(tmp_path):
+    # This test will read the actual raw CSV generated and verify that the cleaning
+    # process yields a dataset matching all the required constraints.
+    data_ai_dir = Path(__file__).resolve().parents[1]
+    raw_path = data_ai_dir / "dataset" / "raw" / "student_data_raw.csv"
+    
+    # If the raw dataset does not exist, generate it first
+    if not raw_path.exists():
+        import importlib.util
+        gen_module_path = data_ai_dir / "dataset" / "synthetic" / "generate_data.py"
+        spec = importlib.util.spec_from_file_location("generate_data", gen_module_path)
+        generate_data = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(generate_data)
+        generate_data.generate_dataset(output_path=raw_path, count=1000)
+        
+    output_path = tmp_path / "student_data_cleaned_actual.csv"
+    summary = clean_data.clean_dataset(input_path=raw_path, output_path=output_path)
+    
+    assert output_path.exists()
+    cleaned_df = pd.read_csv(output_path)
+    
+    assert len(cleaned_df) == 1000
+    assert cleaned_df["student_id"].is_unique
+    assert cleaned_df["name"].is_unique
+    assert cleaned_df["department"].isin(["CSE", "ECE", "EEE", "MECH", "AI&DS"]).all()
+    assert (cleaned_df["attendance_pct"] >= 0).all() and (cleaned_df["attendance_pct"] <= 100).all()
+    assert (cleaned_df["internal_marks"] >= 1).all() and (cleaned_df["internal_marks"] <= 100).all()
+    assert (cleaned_df["semester"] >= 1).all() and (cleaned_df["semester"] <= 8).all()
+    assert (cleaned_df["previous_backlogs"] >= 0).all() and (cleaned_df["previous_backlogs"] <= 5).all()
+    assert (cleaned_df.loc[cleaned_df["semester"] == 1, "previous_backlogs"] == 0).all()
+    assert (cleaned_df["cp_ncp"] == "CP").all()
+    assert set(cleaned_df["risk_category"].unique()) == {"Low Risk", "Moderate Risk", "High Risk"}
+    assert cleaned_df.isna().sum().sum() == 0
+

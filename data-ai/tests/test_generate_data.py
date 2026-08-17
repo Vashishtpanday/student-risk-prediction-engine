@@ -34,12 +34,27 @@ def test_generate_dataset_creates_valid_student_records(tmp_path):
         "risk_category",
     }
 
+    risk_categories = set()
     for row in rows:
         assert row["student_id"].startswith("STU")
         assert row["name"]
         assert row["department"] in {"CSE", "ECE", "EEE", "MECH", "AI&DS"}
-        assert 1 <= int(row["semester"]) <= 8
-        assert 0 <= int(row["attendance_pct"]) <= 100
-        assert 0 <= int(row["internal_marks"]) <= 100
-        assert row["cp_ncp"] in {"CP", "NCP"}
-        assert 0 <= int(row["previous_backlogs"]) <= 5
+        
+        semester = int(row["semester"])
+        attendance = int(row["attendance_pct"])
+        internal_marks = int(row["internal_marks"])
+        backlogs = int(row["previous_backlogs"])
+        cp_ncp = row["cp_ncp"]
+        risk = row["risk_category"]
+
+        assert 1 <= semester <= 8
+        assert 0 <= attendance <= 100
+        assert 1 <= internal_marks <= 100
+        assert cp_ncp == "CP"
+        assert 0 <= backlogs <= 5
+        if semester == 1:
+            assert backlogs == 0
+
+        risk_categories.add(risk)
+
+    assert {"Low Risk", "Moderate Risk", "High Risk"}.issubset(risk_categories)
