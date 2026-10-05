@@ -28,7 +28,7 @@ export const RISK_COLORS = {
   },
 }
 
-export const DEPARTMENTS = ['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT']
+export const DEPARTMENTS = ['CSE', 'ECE', 'MECH', 'CIVIL', 'EEE', 'IT', 'AI&DS']
 
 export const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8]
 

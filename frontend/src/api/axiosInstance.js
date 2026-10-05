@@ -1,12 +1,11 @@
 import axios from 'axios'
 
-// EDIT: Change BASE_URL in .env when Person 2 gives backend URL
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 20000,
 })
 
 axiosInstance.interceptors.request.use(
@@ -26,9 +25,17 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('srpe_token')
       localStorage.removeItem('srpe_user')
-      window.location.href = '/login'
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
-    const message = error.response?.data?.message || error.message || 'Something went wrong'
+
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.message ||
+      'Something went wrong'
+
     return Promise.reject(new Error(message))
   }
 )

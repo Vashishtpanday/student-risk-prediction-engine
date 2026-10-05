@@ -1,258 +1,166 @@
-# AI-Based Student Risk Prediction Engine — Frontend
+# AI-Based Student Risk Prediction Engine
 
-## Assigned To
-Person 3 — Frontend Developer (React.js)
-
-## Module Overview
-This module contains the complete React.js web application.
-It provides the user interface for students, faculty, and administrators
-to interact with the AI-Based Student Risk Prediction Engine.
-It connects with the Node.js backend via REST APIs and displays
-prediction results, dashboards, charts, and recommendations.
+An intelligent, microservices-based ERP module that predicts student academic risk using Machine Learning based on attendance, internal marks, CP/NCP status, and previous backlogs. The system classifies students into Low, Moderate, or High Risk categories and provides Explainable AI insights, personalized recommendations, and a natural-language AI Academic Assistant for faculty queries.
 
 ---
 
-## Folder Structure
+##  Team
 
-frontend/
-│
-├── public/
-│   ├── index.html
-│   ├── favicon.ico
-│   └── logo.png
-│
-├── src/
-│   │
-│   ├── api/
-│   │   ├── axiosInstance.js
-│   │   ├── auth.api.js
-│   │   ├── student.api.js
-│   │   ├── prediction.api.js
-│   │   ├── report.api.js
-│   │   └── dashboard.api.js
-│   │
-│   ├── assets/
-│   │   ├── images/
-│   │   │   ├── logo.png
-│   │   │   └── hero-bg.png
-│   │   └── icons/
-│   │       └── risk-icon.svg
-│   │
-│   ├── components/
-│   │   ├── common/
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── Sidebar.jsx
-│   │   │   ├── Footer.jsx
-│   │   │   ├── Loader.jsx
-│   │   │   ├── Modal.jsx
-│   │   │   ├── Button.jsx
-│   │   │   ├── InputField.jsx
-│   │   │   ├── Badge.jsx
-│   │   │   ├── Card.jsx
-│   │   │   └── Alert.jsx
-│   │   │
-│   │   ├── charts/
-│   │   │   ├── RiskDistributionPie.jsx
-│   │   │   ├── AttendanceBarChart.jsx
-│   │   │   ├── MarksScatterPlot.jsx
-│   │   │   └── SemesterTrendLine.jsx
-│   │   │
-│   │   ├── student/
-│   │   │   ├── StudentCard.jsx
-│   │   │   ├── StudentTable.jsx
-│   │   │   ├── StudentSearchBar.jsx
-│   │   │   └── RiskBadge.jsx
-│   │   │
-│   │   ├── prediction/
-│   │   │   ├── PredictionForm.jsx
-│   │   │   ├── PredictionResult.jsx
-│   │   │   └── PredictionHistory.jsx
-│   │   │
-│   │   └── recommendation/
-│   │       ├── RecommendationCard.jsx
-│   │       └── RecommendationList.jsx
-│   │
-│   ├── pages/
-│   │   ├── auth/
-│   │   │   ├── LoginPage.jsx
-│   │   │   └── RegisterPage.jsx
-│   │   │
-│   │   ├── student/
-│   │   │   ├── StudentDashboard.jsx
-│   │   │   ├── MyPrediction.jsx
-│   │   │   └── MyRecommendations.jsx
-│   │   │
-│   │   ├── faculty/
-│   │   │   ├── FacultyDashboard.jsx
-│   │   │   ├── StudentList.jsx
-│   │   │   ├── StudentDetail.jsx
-│   │   │   ├── PredictStudent.jsx
-│   │   │   └── AIAssistant.jsx
-│   │   │
-│   │   ├── admin/
-│   │   │   ├── AdminDashboard.jsx
-│   │   │   ├── ReportPage.jsx
-│   │   │   └── ManageUsers.jsx
-│   │   │
-│   │   └── common/
-│   │       ├── NotFoundPage.jsx
-│   │       └── UnauthorizedPage.jsx
-│   │
-│   ├── context/
-│   │   ├── AuthContext.jsx
-│   │   └── ThemeContext.jsx
-│   │
-│   ├── hooks/
-│   │   ├── useAuth.js
-│   │   ├── useFetch.js
-│   │   └── usePrediction.js
-│   │
-│   ├── routes/
-│   │   ├── AppRouter.jsx
-│   │   ├── ProtectedRoute.jsx
-│   │   └── RoleRoute.jsx
-│   │
-│   ├── utils/
-│   │   ├── formatDate.js
-│   │   ├── riskColor.js
-│   │   └── validators.js
-│   │
-│   ├── constants/
-│   │   ├── apiEndpoints.js
-│   │   └── riskLevels.js
-│   │
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── index.css
-│
-├── .env
-├── .env.example
-├── .gitignore
-├── vite.config.js
-├── tailwind.config.js
-├── postcss.config.js
-├── package.json
-└── README.md
+| Person | Role | Branch |
+|--------|------|--------|
+| Manshi | ML Engineer + Python Flask API | ml-service/manshi |
+| Roopa | Node.js Backend + MongoDB | backend/roopa |
+| Vashisht | React.js Frontend | frontend/vashisht |
+| Prudhvi | Data Engineer + AI Assistant | data-ai/prudhvi |
 
 ---
 
-## Tech Stack
+##  System Architecture and Ports
 
-| Tool | Purpose |
-|------|---------|
-| React.js 18 | UI framework |
-| Vite | Build tool |
-| Tailwind CSS | Styling |
-| React Router v6 | Client-side routing |
-| Axios | API calls |
-| Chart.js / Plotly | Data visualization |
-| Context API | State management |
+This project runs 4 microservices simultaneously:
 
----
-
-## Pages Overview
-
-| Page | Role | Description |
-|------|------|-------------|
-| /login | All | Login page |
-| /student/dashboard | Student | View own risk and recommendations |
-| /student/prediction | Student | See prediction result |
-| /faculty/dashboard | Faculty | Overview of all students |
-| /faculty/students | Faculty | Student list with risk badges |
-| /faculty/predict | Faculty | Enter student data and get prediction |
-| /faculty/assistant | Faculty | AI assistant query box |
-| /admin/dashboard | Admin | Full system overview |
-| /admin/reports | Admin | Generate reports with charts |
+| Module | Technology | Port | Purpose |
+|--------|------------|------|---------|
+| Backend | Node.js, Express, MongoDB | 5000 | Auth, Student CRUD, Dashboard Stats |
+| ML Service | Python, Flask, Scikit-learn | 5001 | Risk Prediction Model API (`/predict`) |
+| Data-AI | Python, Flask, Pandas, SHAP | 5002 | AI Assistant Queries (`/query`) |
+| Frontend | React 19, Vite, Tailwind CSS | 5173 | Web UI & Role-based Dashboards |
 
 ---
 
-## How to Run Locally
+##  Repository Structure
 
-Step 1 — Clone and navigate
+```text
+student-risk-prediction-engine/
+├── backend/                 # Node.js + Express + MongoDB API
+├── frontend/                # React web application
+├── ml-service/              # Machine Learning Flask microservice
+├── data-ai/                 # Dataset, EDA, Explainability, AI Assistant
+├── .gitignore               # Root gitignore
+├── requirements.txt         # Root Python dependencies
+└── README.md                # This file
+```
 
-git clone https://github.com/[owner]/student-risk-prediction-engine.git
-cd student-risk-prediction-engine/frontend
+---
 
-Step 2 — Switch to your branch
+## ⚙️ Prerequisites
+l these before setup:
+* Node.js (v18 or higher)
+* Python (v3.10 or higher)
+* MongoDB running locally (`mongodb://localhost:27017`)
+* Git
 
-git checkout feature/frontend
+---
 
-Step 3 — Install dependencies
+##  Quick Start Guide
 
+### 1. Clone the repository
+```bash
+git clone https://github.com/YOUR_USERNAME/student-risk-prediction-engine.git
+cd student-risk-prediction-engine
+```
+
+### 2. Install Root Python Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+##  Module Setup Instructions
+
+### A. Backend Setup (Port 5000)
+```bash
+cd backend
 npm install
+```
 
-Step 4 — Set up environment variables
+Create `backend/.env`:
+```env
+PORT=5000
+NODE_ENV=development
+MONGO_URI=mongodb://localhost:27017/student_risk_db
+JWT_SECRET=super_secret_jwt_key_student_risk_prediction_2026
+JWT_EXPIRES_IN=7d
+ML_SERVICE_URL=http://localhost:5001
+AI_ASSISTANT_URL=http://localhost:5002
+CLIENT_URL=http://localhost:5173
+```
 
-cp .env.example .env
+Seed database with 1,000 students & demo accounts:
+```bash
+node seed.js
+```
 
-Edit .env with these values:
-
-VITE_API_BASE_URL=http://localhost:5000/api
-VITE_APP_NAME=Student Risk Prediction Engine
-
-Step 5 — Start the development server
-
+Start backend:
+```bash
 npm run dev
-
-Frontend runs on: http://localhost:5173
-
----
-
-## package.json Dependencies
-
-dependencies:
-  react: ^18.2.0
-  react-dom: ^18.2.0
-  react-router-dom: ^6.20.0
-  axios: ^1.6.2
-  chart.js: ^4.4.0
-  react-chartjs-2: ^5.2.0
-  plotly.js: ^2.27.0
-  react-plotly.js: ^2.6.0
-
-devDependencies:
-  @vitejs/plugin-react: ^4.2.0
-  vite: ^5.0.0
-  tailwindcss: ^3.3.6
-  postcss: ^8.4.32
-  autoprefixer: ^10.4.16
-
-scripts:
-  dev: vite
-  build: vite build
-  preview: vite preview
+```
 
 ---
 
-## Coordination Points
-
-- Get all API endpoints from Person 2 — backend runs on port 5000
-- Get recommendation data structure from Person 4
-- Get prediction response format from Person 1
-- Display contributing factors from Person 4 explainability module
-
----
-
-## Weekly Plan
-
-| Week | Tasks |
-|------|-------|
-| Week 1 | Project setup, Tailwind config, folder structure, reusable components |
-| Week 2 | Login page, Student Dashboard, Faculty Dashboard static UI |
-| Week 3 | Charts integration, Prediction form and result page, AI assistant page |
-| Week 4 | Connect all pages to backend APIs, protected routes, responsive testing |
+### B. ML Service Setup (Port 5001)
+Open a new terminal in the root folder:
+```bash
+cd ml-service
+python src/app.py
+```
 
 ---
 
-## Git Workflow
+### C. Data-AI Assistant Setup (Port 5002)
+Open a new terminal in the root folder:
+```bash
+cd data-ai
+python ai_assistant/assistant_api.py
+```
 
-Start working:
-git checkout feature/frontend
-git pull origin feature/frontend
+---
 
-After making changes:
-git add .
-git commit -m "Add: faculty dashboard with student risk table"
-git push origin feature/frontend
+### D. Frontend Setup (Port 5173)
+Open a new terminal in the root folder:
+```bash
+cd frontend
+npm install
+```
 
-Raise a Pull Request to merge into the dev branch when your feature is complete.
+Create `frontend/.env`:
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+VITE_ML_SERVICE_URL=http://localhost:5001
+VITE_AI_ASSISTANT_URL=http://localhost:5002
+VITE_APP_NAME=Student Risk Prediction Engine
+VITE_APP_VERSION=1.0.0
+```
+
+Start frontend:
+```bash
+npm run dev
+```
+
+Open your browser at `http://localhost:5173`
+
+---
+
+##  Demo Login Credentials
+
+Password for all accounts: `password123`
+
+| Role | Email | Access |
+|------|-------|--------|
+| Admin | admin@college.edu | Reports, manage users, institution stats |
+| Faculty | faculty@college.edu | Student list, predict risk, AI assistant |
+| Student | student@college.edu | Own dashboard, risk, recommendations |
+
+*(Note: You can log in as ANY of the 1,000 students in the database using their email, password `password123`, and Role `Student`).*
+
+---
+
+##  Features Implemented
+
+* **Student View:** Personal dashboard, live ML risk prediction with confidence scores, personalized actionable recommendations.
+* **Faculty View:** Complete student monitoring list with dynamic search/filters, manual prediction form for what-if scenarios, natural language AI Academic Assistant chat.
+* **Admin View:** Institution-wide analytics, department/semester comparative reports, full user management (add/delete records directly into MongoDB).
+
+---
+
