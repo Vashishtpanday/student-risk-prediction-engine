@@ -43,7 +43,7 @@ student-risk-prediction-engine/
 
 ---
 
-## ⚙️ Prerequisites
+##  Prerequisites
 l these before setup:
 * Node.js (v18 or higher)
 * Python (v3.10 or higher)
